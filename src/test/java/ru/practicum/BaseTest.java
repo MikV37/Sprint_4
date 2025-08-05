@@ -23,6 +23,7 @@ public abstract class BaseTest {
         }
 
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        driver.manage().window().maximize();
     }
 
     @After

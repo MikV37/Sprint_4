@@ -4,13 +4,28 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import ru.practicum.pages.MainPage;
+import ru.practicum.pages.OrderPage;
+
 import java.util.Arrays;
 import java.util.Collection;
+
 import static org.junit.Assert.assertTrue;
 import static ru.practicum.util.Config.BASE_URL;
 
 @RunWith(Parameterized.class)
 public class OrderScooterTest extends BaseTest {
+
+    // Тестовые данные в виде констант
+    private static final Object[][] TEST_DATA = {
+            {"Михаил", "Самокатов", "Фрунзе 55", "4", "89009009090", "03.08.2025", "пятеро суток", "black", "Позвонить за час"},
+            {"Алексей", "Иванов", "Ленинградская 10", "2", "89991234567", "04.08.2025", "трое суток", "grey", "Везите быстрее"},
+            {"Анна", "Петрова", "Пушкина 1", "1", "89001234567", "05.08.2025", "двое суток", "black", "Срочно"}
+    };
+
+    @Parameterized.Parameters(name = "Тестовые данные: {0} - {1}")
+    public static Collection<Object[]> testData() {
+        return Arrays.asList(TEST_DATA);
+    }
 
     private String firstName;
     private String lastName;
@@ -21,11 +36,10 @@ public class OrderScooterTest extends BaseTest {
     private String rentalPeriod;
     private String color;
     private String comment;
-    private boolean useBottomButton;
 
     public OrderScooterTest(
             String firstName, String lastName, String address, String metroStation,
-            String phone, String date, String rentalPeriod, String color, String comment, boolean useBottomButton) {
+            String phone, String date, String rentalPeriod, String color, String comment) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
@@ -35,44 +49,28 @@ public class OrderScooterTest extends BaseTest {
         this.rentalPeriod = rentalPeriod;
         this.color = color;
         this.comment = comment;
-        this.useBottomButton = useBottomButton;
-    }
-
-    @Parameterized.Parameters
-    public static Collection<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
-                {"Михаил", "Самокатов", "Фрунзе 55", "4", "89009009090", "03.08.2025", "пятеро суток", "black", "Позвонить за час", false},
-                {"Алексей", "Иванов", "Ленинградская 10", "2", "89991234567", "04.08.2025", "трое суток", "grey", "Везите быстрее", true},
-                {"Анна", "Петрова", "Пушкина 1", "1", "89001234567", "05.08.2025", "двое суток", "black", "Срочно", false}
-        });
     }
 
     @Test
-    public void testOrder(){
+    public void TestOrder() {
         driver.get(BASE_URL);
 
+        // Открываем страницу и кнопку заказа
         MainPage mainPage = new MainPage(driver);
+        mainPage.clickOrderButtonTest();
 
-        // Выбор метода открытия формы заказа
-        if (useBottomButton) {
-            mainPage.clickOrderButtonAtBottom();
-        } else {
-            mainPage.clickOrderButton();
-        }
-        // Заполнение формы с параметрами
-        mainPage.fillFirstName(firstName);
-        mainPage.fillLastName(lastName);
-        mainPage.fillAddress(address);
-        mainPage.selectMetroStation(metroStation);
-        mainPage.fillPhone(phone);
-        mainPage.clickNext();
+        // Создаем объект OrderPage для заполнения формы
+        OrderPage orderPage = new OrderPage(driver);
 
-        mainPage.fillDate(date);
-        mainPage.selectRentalPeriod(rentalPeriod);
-        mainPage.selectColor(color);
-        mainPage.fillComment(comment);
-        mainPage.submitOrder();
+        // Заполняем личную информацию и переходим далее
+        orderPage.fillPersonalInfoTest(firstName, lastName, address, metroStation, phone)
+                .clickNextTest()
+                .fillOrderDetailsTest(date, rentalPeriod, color, comment);
 
-        assertTrue(mainPage.isOrderSuccess());
+        // Отправляем заказ
+        orderPage.submitOrderTest();
+
+        // Проверка успеха
+        assertTrue(mainPage.isOrderSuccessTest());
     }
 }
